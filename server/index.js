@@ -1,9 +1,15 @@
 const express = require('express');
-var cors = require("cors");
+const cors = require("cors");
+const bodyParser = require('body-parser');
 const app = express();
 const port = 3000;
 
 app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+// app.use(function (req, res) {
+//     res.setHeader('Content-Type', 'text/json');
+// });
 
 const mysql = require('mysql');
 const connection = mysql.createConnection({
@@ -13,7 +19,17 @@ const connection = mysql.createConnection({
     database: 'community-events'
 });
 
-const GET_EVENTS = `SELECT * FROM events`;
+const ERROR_MESSAGES = {
+    create: "Something went wrong while creating an event: ",
+    read: "Something went wrong while getting events: ",
+    update: "Something went wrong while updating an event: ",
+    delete: "Something went wrong while deleting an event: "
+};
+
+const DEFAULT_SUCCESS_RESPONSE = {
+    code: 0,
+    message: "Success"
+}
 
 connection.connect(function(err) {
     if (err) {
@@ -31,23 +47,64 @@ app.get('/api/ping', (req, res) => {
 
 // get events
 app.get('/api/events', (req, res) => {
+    console.info("getting events");
+    const GET_EVENTS = `SELECT * FROM events`;
     let response;
     connection.query(GET_EVENTS, function(err, result) {
         if (err) {
             response = {
                 result: [],
                 code: -1,
-                message: "Something went wrong: " + err
+                message: ERROR_MESSAGES.read + err
             }
             res.status(500).json(response);
+        } else {
+            response = {
+                result,
+                ...DEFAULT_SUCCESS_RESPONSE
+            }
+            res.status(200).json(response);
         }
+    });
+});
 
-        response = {
-            result,
-            code: 0,
-            message: "Success"
+// create event
+app.post('/api/event', (req, res) => {
+    console.log(JSON.stringify(req.body));
+    const CREATE_EVENT = `
+    INSERT INTO events (
+        EventTitle, 
+        StartDateTime, 
+        ExpiryDateTime, 
+        Description,
+        ContactEmail,
+        ContactTelephone,
+        GeoLocation,
+        Tags
+    )
+    VALUES (
+        ${req.body.title},
+        ${req.body.startDateTime},
+        ${req.body.expiryDateTime},
+        ${req.body.description},
+        ${req.body.contactEmail},
+        ${req.body.contactTelephone},,
+        POINT(${req.body.geolocation.lat}, ${req.body.geolocation.long}),
+        ${req.body.tags}
+    )
+    `;
+    let response;
+    connection.query(CREATE_EVENT, function(err, result) {
+        if(err) {
+            response = {
+                code: -1,
+                message: ERROR_MESSAGES.create + err
+            }
+            res.status(500).json(response);
+        } else {
+            response = DEFAULT_SUCCESS_RESPONSE;
+            res.status(200).json(response);
         }
-        res.status(200).json(response);
     });
 });
 

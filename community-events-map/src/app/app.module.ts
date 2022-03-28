@@ -8,6 +8,8 @@ import { GoogleMapsModule } from '@angular/google-maps';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
+import { MatCardModule } from '@angular/material/card';
+import { MatListModule } from '@angular/material/list';
 
 @NgModule({
   declarations: [
@@ -19,6 +21,8 @@ import { HttpClientModule } from '@angular/common/http';
     AppRoutingModule,
     GoogleMapsModule,
     MatFormFieldModule,
+    MatCardModule,
+    MatListModule,
     BrowserAnimationsModule,
     HttpClientModule
   ],

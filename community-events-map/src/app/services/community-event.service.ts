@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ICommunityEvent, ICommunityEventListResponse, ICommunityEventResponse } from '../types/community-event.types';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators'
 
 @Injectable({
   providedIn: 'root'
@@ -18,10 +19,17 @@ export class CommunityEventService {
     return this.http.post<ICommunityEventResponse>(this.root + endpoint, eventDetails);
   }
 
-  getEvents(): Observable<ICommunityEventListResponse> {
+  getEvents(): Observable<ICommunityEvent[]> {
     const endpoint = "/events";
+    let result: ICommunityEvent[];
 
-    return this.http.get<ICommunityEventListResponse>(this.root + endpoint);
+    this.http.get<ICommunityEventListResponse>(this.root + endpoint).pipe(
+      map(response => response.result)
+    ).subscribe(res => console.log("res: ", res));
+
+    return this.http.get<ICommunityEventListResponse>(this.root + endpoint).pipe(
+      map((response: ICommunityEventListResponse) => response.result)
+    );
   }
 
   updateEvent(eventId: string, updatedEventDetails: ICommunityEvent): Observable<ICommunityEventResponse> {

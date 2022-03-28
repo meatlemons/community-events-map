@@ -1,0 +1,11 @@
+$default-padding: 16px;
+
+mat-card {
+
+}
+
+#map {
+    padding: $default-padding;
+    min-height: 300px;
+    min-width: 400px;
+}

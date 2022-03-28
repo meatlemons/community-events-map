@@ -1,2 +1,21 @@
-<mat-form-field></mat-form-field>
-<google-map [center]="center" [zoom]="zoom"></google-map>
+<div id="events-container">
+    <div id="events-list">
+        <mat-card>
+            <mat-card-title>Events</mat-card-title>
+            <mat-card-content>
+                <mat-list *ngFor="let event of events$ | async">
+                    {{event.title}}
+                </mat-list>
+            </mat-card-content>
+        </mat-card>
+    </div>
+    <div id="map-container">
+        <mat-card>
+            <mat-card-content>
+                    <div id="map" #map>
+                        
+                    </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>

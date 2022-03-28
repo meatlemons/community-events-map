@@ -1,13 +1,13 @@
 export interface ICommunityEvent {
-    Id: string 
-    title: string
-    startDateTime: Date
-    expiryDateTime: Date
-    description: string
-    contactEmail: string
-    contactTelephone: string
-    tags: string[]
-    geolocation: google.maps.LatLngLiteral
+    Id?: string 
+    title?: string
+    startDateTime?: Date
+    expiryDateTime?: Date
+    description?: string
+    contactEmail?: string
+    contactTelephone?: string
+    tags?: string[]
+    geolocation?: google.maps.LatLngLiteral
 }
 
 export interface IAddress {
@@ -25,5 +25,5 @@ export interface ICommunityEventResponse {
 }
 
 export interface ICommunityEventListResponse extends ICommunityEventResponse {
-    events: ICommunityEvent[]
+    result: ICommunityEvent[]
 }
