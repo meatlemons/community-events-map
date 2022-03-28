@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommunityEventService } from '../services/community-event.service';
 import { ICommunityEvent } from '../types/community-event.types';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
@@ -14,10 +16,14 @@ export class MapComponent implements OnInit {
     lng: 1.1482
   };
   public zoom: number = 10;
+  public events$: Observable<ICommunityEvent[]>;
 
   constructor(private readonly _communityEventService: CommunityEventService) { }
 
   ngOnInit(): void {
+    this._communityEventService.getEvents().pipe(map(result => {
+      result.events
+    }));
   }
 
   onCreateClick(value: ICommunityEvent): void {
