@@ -1,11 +1,87 @@
 $default-padding: 16px;
 
-mat-card {
-
-}
-
-#map {
-    padding: $default-padding;
-    min-height: 300px;
-    min-width: 400px;
+#events-container {
+    display: flex;
+    flex-wrap: wrap;
+    .form-content {
+        max-height: 25vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    #event-form {
+        flex-basis: 100%;
+        padding: $default-padding;
+        label {
+            padding-left: 4px;
+        }
+        mat-form-field {
+            margin-right: 8px;
+        }
+        .title, .description, .tags {
+            width: calc(100% - 8px);
+        }
+        .start-date, .end-date, .start-time, .end-time, .email, .phone, .address-one, .address-two, .city, .county, .post-code {
+            width: calc(50% - 8px);
+        }
+        .submit-button {
+            margin: 8px 0;
+        }
+    }
+    #events-list {
+        flex-grow: 1;
+        padding: $default-padding;
+        width: fit-content;
+        max-height: 50vh;
+        span {
+            padding: 0 2px;
+        }
+        .event-list-item {
+            height: fit-content;
+            padding: 4px;
+            span {
+                display: block;
+                width: inherit;
+                margin-top: 8px;
+            }
+            .event-title {
+                font-weight: bold;
+                text-transform: capitalize;
+            }
+            .event-description {
+                font-style: italic;
+            }
+            .event-tags {
+                .tag-chip {
+                    display: inline-flex;
+                    border-radius: 4px;
+                    padding: 2px 8px;
+                    margin-right: 4px;
+                    background-color: darkgray;
+                    color: white;
+                }
+            }
+        }
+    }
+    
+    #map-container {
+        flex-grow: 4;
+        padding: $default-padding;
+        #map {
+            padding: $default-padding;
+            min-height: 50vh;
+            min-width: 400px;
+        }
+        @media only screen and (max-width: 500px) {
+            #map {
+                // this value is arbitrary
+                // just needs to be wide enough
+                // to force a line break
+                min-width: 50vw;
+            }
+        }
+    }
+    
+    mat-list-option .mat-list-item-content .mat-list-item-content-reverse {
+        padding: 0 !important;
+    }
 }

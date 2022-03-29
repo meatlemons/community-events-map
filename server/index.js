@@ -7,9 +7,6 @@ const port = 3000;
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-// app.use(function (req, res) {
-//     res.setHeader('Content-Type', 'text/json');
-// });
 
 const mysql = require('mysql');
 const connection = mysql.createConnection({
@@ -47,7 +44,6 @@ app.get('/api/ping', (req, res) => {
 
 // get events
 app.get('/api/events', (req, res) => {
-    console.info("getting events");
     const GET_EVENTS = `SELECT * FROM events`;
     let response;
     connection.query(GET_EVENTS, function(err, result) {
@@ -71,26 +67,36 @@ app.get('/api/events', (req, res) => {
 // create event
 app.post('/api/event', (req, res) => {
     console.log(JSON.stringify(req.body));
+    console.log(`
+    ${req.body.title},
+    ${req.body.startDateTime},
+    ${req.body.expiryDateTime},
+    ${req.body.description},
+    ${req.body.contactEmail},
+    ${req.body.contactTelephone},
+    POINT(${req.body.geolocation.x}, ${req.body.geolocation.y}),
+    ${req.body.tags}
+    `);
     const CREATE_EVENT = `
     INSERT INTO events (
         EventTitle, 
         StartDateTime, 
         ExpiryDateTime, 
-        Description,
+        \`Description\`,
         ContactEmail,
         ContactTelephone,
         GeoLocation,
         Tags
     )
     VALUES (
-        ${req.body.title},
-        ${req.body.startDateTime},
-        ${req.body.expiryDateTime},
-        ${req.body.description},
-        ${req.body.contactEmail},
-        ${req.body.contactTelephone},,
-        POINT(${req.body.geolocation.lat}, ${req.body.geolocation.long}),
-        ${req.body.tags}
+        "${req.body.title}",
+        "${req.body.startDateTime}",
+        "${req.body.expiryDateTime}",
+        "${req.body.description}",
+        "${req.body.contactEmail}",
+        "${req.body.contactTelephone}",
+        POINT(${req.body.geolocation.x}, ${req.body.geolocation.y}),
+        '[${req.body.tags}]'
     )
     `;
     let response;

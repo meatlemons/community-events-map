@@ -1,20 +1,152 @@
 <div id="events-container">
+    <div id="event-form">
+        <mat-card>
+            <mat-card-title>
+                Create Event
+            </mat-card-title>
+            <mat-card-content class="form-content">
+                <label>
+                    <br>
+                    Event Details
+                </label>
+                <form [formGroup]="eventsForm" (ngSubmit)="submitForm()">
+
+                    <br>
+                    <mat-form-field appearance="fill" class="title">
+                        <mat-label>Event Title</mat-label>
+                        <input formControlName="title" required matInput type="text" />
+                    </mat-form-field>
+
+                    <br>
+
+                    <mat-form-field appearance="fill" class="start-date">
+                        <mat-label>Start Date</mat-label>
+                        <input formControlName="startDate" required matInput [matDatepicker]="startPicker" [min]="minDate"/>
+                        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                        <mat-datepicker #startPicker></mat-datepicker>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="start-time">
+                        <mat-label>Start Time</mat-label>
+                        <input formControlName="startTime" required matInput type="text" placeholder="e.g. 13:00" placeholder="e.g. 13:00"/>
+                    </mat-form-field>
+
+                    <br>
+
+                    <mat-form-field appearance="fill" class="end-date">
+                        <mat-label>End Date</mat-label>
+                        <input formControlName="endDate" required matInput [matDatepicker]="endPicker" [min]="eventsForm.controls.startDate.value || minDate" />
+                        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                        <mat-datepicker #endPicker></mat-datepicker>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="end-time">
+                        <mat-label>End Time</mat-label>
+                        <input formControlName="endTime" required matInput type="text" placeholder="e.g. 13:00"/>
+                    </mat-form-field>
+
+                    <br>
+
+                    <mat-form-field appearance="fill" class="description">
+                        <mat-label>Description</mat-label>
+                        <textarea formControlName="description" matInput></textarea>
+                    </mat-form-field>
+
+                    <label>
+                        <br>
+                        Contact
+                    </label>
+                    <br>
+                    <mat-form-field appearance="fill" class="email">
+                        <mat-label>Contact Email</mat-label>
+                        <input required matInput type="email" formControlName="email" placeholder="email@email.com" />
+                        <mat-error *ngIf="eventsForm.controls.email.hasError('email')">Invalid Email Format</mat-error>
+                        <mat-error *ngIf="eventsForm.controls.email.hasError('required')">Required</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="phone">
+                        <mat-label>Contact Phone</mat-label>
+                        <input formControlName="phone" required matInput type="tel" placeholder="+447123456789" />
+                    </mat-form-field>
+
+                    <label>
+                        <br>
+                        Location
+                    </label>
+                    <br>
+                    <mat-form-field appearance="fill" class="address-one">
+                        <mat-label>Address 1</mat-label>
+                        <input formControlName="addressOne" required matInput type="text" />
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="address-two">
+                        <mat-label>Address 2</mat-label>
+                        <input formControlName="addressTwo" matInput type="text" />
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="city">
+                        <mat-label>City</mat-label>
+                        <input formControlName="city" required matInput type="text" />
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" appearance="fill" class="county">
+                        <mat-label>County</mat-label>
+                        <mat-select formControlName="county" required>
+                            <mat-option *ngFor="let county of counties" value="county">
+                                {{ county }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="post-code">
+                        <mat-label>Post Code</mat-label>
+                        <input formControlName="postCode" required matInput type="text" />
+                    </mat-form-field>
+
+                    <br>
+
+                    <label>
+                        <br>
+                        Additional Info
+                    </label>
+                    <br>
+                    <mat-form-field appearance="fill" class="tags">
+                        <mat-label>Tags</mat-label>
+                        <textarea formControlName="tags" matInput></textarea>
+                        <mat-hint>Comma separated e.g. outside, family friendly</mat-hint>
+                    </mat-form-field>
+                    <button [disabled]="!eventsForm.valid"class="submit-button" mat-raised-button color="primary">Submit</button>
+                </form>
+            </mat-card-content>
+        </mat-card>
+    </div>
+    <!-- <div id="blog">
+        <mat-card>
+            <mat-card-title>
+                Blog
+            </mat-card-title>
+        </mat-card>
+    </div> -->
     <div id="events-list">
         <mat-card>
-            <mat-card-title>Events</mat-card-title>
-            <mat-card-content>
-                <mat-list *ngFor="let event of events$ | async">
-                    {{event.title}}
-                </mat-list>
+            <mat-card-title>Upcoming Events</mat-card-title>
+            <mat-card-content class="upcoming-events-content">
+                <mat-selection-list [multiple]="false">
+                    <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of events$ | async">
+                        <span class="event-title">
+                            {{event.title}}
+                        </span>
+                        <span *ngIf="event.description != 'null'" class="event-description">
+                            "{{event.description }}"
+                        </span>
+                        <span class="event-tags">
+                            <mat-chip class="tag-chip" *ngFor="let tag of event.tags">
+                                {{tag}}
+                            </mat-chip>
+                        </span>
+                    </mat-list-option>
+                </mat-selection-list>
             </mat-card-content>
         </mat-card>
     </div>
     <div id="map-container">
         <mat-card>
             <mat-card-content>
-                    <div id="map" #map>
-                        
-                    </div>
+                    <div id="map" #map></div>
             </mat-card-content>
         </mat-card>
     </div>
