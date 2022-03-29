@@ -20,6 +20,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 @NgModule({
   declarations: [
@@ -42,6 +43,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatDividerModule,
     MatExpansionModule,
     MatSelectModule,
+    MatSnackBarModule,
     ReactiveFormsModule,
     BrowserAnimationsModule,
     HttpClientModule

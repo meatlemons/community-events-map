@@ -15,6 +15,7 @@
                     <mat-form-field appearance="fill" class="title">
                         <mat-label>Event Title</mat-label>
                         <input formControlName="title" required matInput type="text" />
+                        <mat-error *ngIf="eventsForm.controls.title.hasError('required')">Required</mat-error>
                     </mat-form-field>
 
                     <br>
@@ -22,12 +23,15 @@
                     <mat-form-field appearance="fill" class="start-date">
                         <mat-label>Start Date</mat-label>
                         <input formControlName="startDate" required matInput [matDatepicker]="startPicker" [min]="minDate"/>
+                        <mat-error *ngIf="eventsForm.controls.startDate.hasError('required')">Required</mat-error>
                         <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
                         <mat-datepicker #startPicker></mat-datepicker>
                     </mat-form-field>
                     <mat-form-field appearance="fill" class="start-time">
                         <mat-label>Start Time</mat-label>
                         <input formControlName="startTime" required matInput type="text" placeholder="e.g. 13:00" placeholder="e.g. 13:00"/>
+                        <mat-error *ngIf="eventsForm.controls.startTime.hasError('required')">Required</mat-error>
+                        <mat-error *ngIf="eventsForm.controls.startTime.hasError('pattern')">Please use HH:MM format</mat-error>
                     </mat-form-field>
 
                     <br>
@@ -35,12 +39,15 @@
                     <mat-form-field appearance="fill" class="end-date">
                         <mat-label>End Date</mat-label>
                         <input formControlName="endDate" required matInput [matDatepicker]="endPicker" [min]="eventsForm.controls.startDate.value || minDate" />
+                        <mat-error *ngIf="eventsForm.controls.endDate.hasError('required')">Required</mat-error>
                         <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
                         <mat-datepicker #endPicker></mat-datepicker>
                     </mat-form-field>
                     <mat-form-field appearance="fill" class="end-time">
                         <mat-label>End Time</mat-label>
                         <input formControlName="endTime" required matInput type="text" placeholder="e.g. 13:00"/>
+                        <mat-error *ngIf="eventsForm.controls.endTime.hasError('required')">Required</mat-error>
+                        <mat-error *ngIf="eventsForm.controls.endTime.hasError('pattern')">Please use HH:MM format</mat-error>
                     </mat-form-field>
 
                     <br>
@@ -65,6 +72,7 @@
                     <mat-form-field appearance="fill" class="phone">
                         <mat-label>Contact Phone</mat-label>
                         <input formControlName="phone" required matInput type="tel" placeholder="+447123456789" />
+                        <mat-error *ngIf="eventsForm.controls.phone.hasError('required')">Required</mat-error>
                     </mat-form-field>
 
                     <label>
@@ -75,6 +83,7 @@
                     <mat-form-field appearance="fill" class="address-one">
                         <mat-label>Address 1</mat-label>
                         <input formControlName="addressOne" required matInput type="text" />
+                        <mat-error *ngIf="eventsForm.controls.addressOne.hasError('required')">Required</mat-error>
                     </mat-form-field>
                     <mat-form-field appearance="fill" class="address-two">
                         <mat-label>Address 2</mat-label>
@@ -83,18 +92,21 @@
                     <mat-form-field appearance="fill" class="city">
                         <mat-label>City</mat-label>
                         <input formControlName="city" required matInput type="text" />
+                        <mat-error *ngIf="eventsForm.controls.city.hasError('required')">Required</mat-error>
                     </mat-form-field>
                     <mat-form-field appearance="fill" appearance="fill" class="county">
                         <mat-label>County</mat-label>
                         <mat-select formControlName="county" required>
-                            <mat-option *ngFor="let county of counties" value="county">
+                            <mat-option *ngFor="let county of counties" [value]="county">
                                 {{ county }}
                             </mat-option>
                         </mat-select>
+                        <mat-error *ngIf="eventsForm.controls.county.hasError('required')">Required</mat-error>
                     </mat-form-field>
                     <mat-form-field appearance="fill" class="post-code">
                         <mat-label>Post Code</mat-label>
                         <input formControlName="postCode" required matInput type="text" />
+                        <mat-error *ngIf="eventsForm.controls.postCode.hasError('required')">Required</mat-error>
                     </mat-form-field>
 
                     <br>

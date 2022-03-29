@@ -6,6 +6,8 @@ import { map } from 'rxjs/operators';
 import { DEFAULT_MAP_OPTIONS } from './map.defaults';
 import { COUNTIES } from './form.data';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { TIME_INPUT_VALIDATION } from './regex';
+import { MatSnackBar } from '@angular/material/snack-bar';
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
@@ -23,27 +25,27 @@ export class MapComponent implements OnInit, AfterViewInit {
   eventsForm: FormGroup = new FormGroup({
     title: new FormControl('', Validators.required),
     startDate: new FormControl('', Validators.required),
-    startTime: new FormControl('', Validators.required),
+    startTime: new FormControl('', [Validators.required, Validators.pattern(TIME_INPUT_VALIDATION)]),
     endDate: new FormControl('', Validators.required),
-    endTime: new FormControl('', Validators.required),
+    endTime: new FormControl('', [Validators.required, Validators.pattern(TIME_INPUT_VALIDATION)]),
     description: new FormControl(),
     email: new FormControl('', [Validators.required, Validators.email]),
     phone: new FormControl('', Validators.required),
     addressOne: new FormControl('', Validators.required),
     addressTwo: new FormControl(),
     city: new FormControl('', Validators.required),
-    county: new FormControl('Suffolk', Validators.required),
+    county: new FormControl('', Validators.required),
     postCode: new FormControl('', Validators.required),
     tags: new FormControl()
   });
 
-  constructor(private readonly _communityEventService: CommunityEventService) { }
+  constructor(
+    private readonly _communityEventService: CommunityEventService,
+    private _snackbar: MatSnackBar
+  ) { }
 
   ngOnInit(): void {
-    this.events$ = this._communityEventService.getEvents().pipe(
-      // filter out expired events
-      map(events => events.filter(event => Math.floor(new Date(event.expiryDateTime).getTime()) > Date.now()))
-    );
+    this.getAndFilterEvents();
     this.events$.subscribe(events => {
       events.forEach(event => {
         this.markers.push(new google.maps.Marker({
@@ -108,6 +110,12 @@ export class MapComponent implements OnInit, AfterViewInit {
     formData.endDate.setHours(endTime.hours);
     formData.endDate.setMinutes(endTime.minutes);
 
+    // validate date/times
+    if (formData.startDate > formData.endDate) {
+      this._snackbar.open("Start Date can't be before end date. Setting expiry date to 24h from start date.");
+      formData.endDate = new Date(formData.endDate.setDate(formData.endDate.getDate() + 1));
+    }
+
     const createRequest: ICommunityEventCreateRequest = {
       title: formData.title,
       startDateTime: this.mySqlDateConverter(formData.startDate),
@@ -120,10 +128,24 @@ export class MapComponent implements OnInit, AfterViewInit {
     };
 
     // call create service
-    // TODO: remove logging
-    this._communityEventService.createEvent(createRequest).subscribe(result => {
-      console.log("Create result: ", result);
-    })
+    this._communityEventService.createEvent(createRequest).subscribe(createResponse => {
+      this._snackbar.open(createResponse.message, "", { duration: 5000 });
+    });
+    // retrieve events to keep list up to date
+    this.getAndFilterEvents();
+
+    // TODO: try and clean this up
+    this.events$.subscribe(() => {});
+  }
+
+  private getAndFilterEvents() {
+    this.events$ = this._communityEventService.getEvents().pipe(
+      map(events => events.filter(event => this.isInPast(event.expiryDateTime)))
+    );
+  }
+
+  private isInPast(date: Date): boolean {
+    return Math.floor(new Date(date).getTime()) > Date.now();
   }
 
   private splitHoursMinutes(time: string): ITime {
@@ -171,12 +193,24 @@ export class MapComponent implements OnInit, AfterViewInit {
   private addressToLatLng(address: IAddress): Promise<IPoint> {
     const stringifiedAddress: string = [address.addressOne, address.addressTwo, address.city, address.county, address.postCode].join();
     const geocoder: google.maps.Geocoder = new google.maps.Geocoder();
+    
     try {
-      return geocoder.geocode({ address: stringifiedAddress },
-        function(results, status) {}).then(res => { return {
-          x: res.results![0].geometry.location.lat(),
-          y: res.results![0].geometry.location.lng()
-        } })
+      return new Promise(function(resolve) {
+        geocoder.geocode({ address: stringifiedAddress },
+          function(results, status) {
+            if (status !== "ZERO_RESULTS") {
+              resolve({
+                x: results![0].geometry.location.lat(),
+                y: results![0].geometry.location.lng()
+              });
+            } else {
+              resolve({
+                x: 0,
+                y: 0
+              });
+            }
+          });
+      })
     } catch {
       throw new Error("Couldn't convert address to lat/long");
     }
