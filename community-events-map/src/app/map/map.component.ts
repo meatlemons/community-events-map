@@ -41,7 +41,8 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.events$ = this._communityEventService.getEvents().pipe(
-      map(events => events.filter(event => Math.floor(new Date(event.expiryDateTime).getTime() / 1000) < Date.now()))
+      // filter out expired events
+      map(events => events.filter(event => Math.floor(new Date(event.expiryDateTime).getTime()) > Date.now()))
     );
     this.events$.subscribe(events => {
       events.forEach(event => {
@@ -205,7 +206,7 @@ export class MapComponent implements OnInit, AfterViewInit {
       <br>
       <a href="tel:${event.contactTelephone}">${event.contactTelephone}</a>
       <br>
-      <a target="_blank" href="https://www.google.com/maps/dir/?api=1&desination=${event.geolocation.x},${event.geolocation.y}">Directions</a>
+      <a target="_blank" href="https://www.google.com/maps/dir/?api=1&desination=${event.geolocation.x},${event.geolocation.y}&dir_action=navigate">Directions</a>
     </div>
     `
   }
