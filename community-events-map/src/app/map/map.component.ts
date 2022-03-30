@@ -144,17 +144,10 @@ export class MapComponent implements OnInit, AfterViewInit {
     const address: IAddress = {
       ...formData
     }
-
     const geolocation: IPoint = await this.addressToLatLng(address);
-
-    console.log("start time: ", startTime.hours + ":" + startTime.minutes);
-    console.log("end time:   ", endTime.hours + ":" + endTime.minutes);
 
     // workaround mat date picker limitation
     // by setting hours/minutes using above values
-    // hacky workaround to account for timezone shift 
-    // in conversion to mySQL DATETIME
-    // (1 hour each way, presumably due to UTC vs BST)
     formData.startDate.setHours(startTime.hours, startTime.minutes);
     formData.endDate.setHours(endTime.hours, startTime.minutes);
 
@@ -182,14 +175,11 @@ export class MapComponent implements OnInit, AfterViewInit {
       tags
     };
 
-    console.log("create request: ", createRequest);
-
     // call create service
     this._communityEventService.createEvent(createRequest).subscribe(createResponse => {
       this._snackbar.open(`${createResponse.message}! Please refresh to update the map.`, "", { duration: SNACKBAR_DURATION_DEFAULT });
       this.getAndFilterEvents().subscribe(events => {
         const newEvent = events.find(event => event.title === formData.title);
-        console.log("new event: ", newEvent);
         if (newEvent) {
           setTimeout(() => { this.markers.push(new google.maps.Marker({
               position: { lat: createRequest.geolocation?.x, lng: createRequest.geolocation?.y },

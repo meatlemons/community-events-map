@@ -23,10 +23,6 @@ export class CommunityEventService {
   getEvents(): Observable<ICommunityEvent[]> {
     const endpoint = "/events";
 
-    this.http.get<ICommunityEventListResponse>(this.root + endpoint).pipe(
-      map(response => response.result)
-    ).subscribe(res => console.log("res: ", res));
-
     return this.http.get<ICommunityEventListResponse>(this.root + endpoint).pipe(
       map(response => response.result.filter(event => 
           Math.floor(new Date(event.ExpiryDateTime).getTime() / 1000) < Date.now())
