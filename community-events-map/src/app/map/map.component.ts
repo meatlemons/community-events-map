@@ -1,13 +1,16 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommunityEventService } from '../services/community-event.service';
 import { IAddress, ICommunityEvent, ICommunityEventCreateRequest, ICommunityEventFormData, IGenericRESTResponse, IPoint, ITime } from '../types/community-event.types';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DEFAULT_MAP_OPTIONS } from './map.defaults';
+import { DEFAULT_DETAIL_ZOOM, DEFAULT_MAP_OPTIONS } from './map.defaults';
 import { COUNTIES } from './form.data';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { TIME_INPUT_VALIDATION } from './regex';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MOCK_EVENTS } from '../mocks/mock.data';
+import { MatDialog } from '@angular/material/dialog';
+import { FilterComponent } from '../filter/filter.component';
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
@@ -22,6 +25,9 @@ export class MapComponent implements OnInit, AfterViewInit {
   tagList: string[] = [];
   minDate = new Date(Date.now());
   counties = COUNTIES;
+  searchQuery: string;
+  searchResults$: Observable<ICommunityEvent[]>;
+  currentlyAppliedFilters: string[];
   eventsForm: FormGroup = new FormGroup({
     title: new FormControl('', Validators.required),
     startDate: new FormControl('', Validators.required),
@@ -39,23 +45,32 @@ export class MapComponent implements OnInit, AfterViewInit {
     tags: new FormControl()
   });
 
+  mockEvents = MOCK_EVENTS;
+
   constructor(
     private readonly _communityEventService: CommunityEventService,
-    private _snackbar: MatSnackBar
+    private _snackbar: MatSnackBar,
+    public dialog: MatDialog
   ) { }
 
   ngOnInit(): void {
-    this.getAndFilterEvents();
-    this.events$.subscribe(events => {
-      events.forEach(event => {
-        this.markers.push(new google.maps.Marker({
-          position: { lat: event.geolocation?.x, lng: event.geolocation?.y },
-          title: event.title
-        }));
-        // TODO: BUG - displays multiple info panels
+    this.getAndFilterEvents()
+      .subscribe(events => {
+        this.markers = [];
+        events.forEach(event => {
+          this.markers.push(new google.maps.Marker({
+            position: { lat: event.geolocation?.x, lng: event.geolocation?.y },
+            title: event.title
+          }));
+          // store tags for use in filtering
+          this.pullTagData(event.tags);
+        });
+
         this.markers.forEach(marker => {
-          const infoWindow = new google.maps.InfoWindow({ content: this.constructInfoWindowHtml(event) });
-          marker.setMap(this.map) 
+          // set up info windows
+          const communityEvent = events.find(event => event.title === marker.getTitle());
+          const infoWindow = new google.maps.InfoWindow({ content: this.constructInfoWindowHtml(communityEvent!) });
+          marker.setMap(this.map) // not needed?
           marker.addListener("click", () => {
             infoWindow.open({
               anchor: marker,
@@ -63,9 +78,28 @@ export class MapComponent implements OnInit, AfterViewInit {
               shouldFocus: false
             });
           });
+          // close all info windows when the map is clicked
+          google.maps.event.addListener(this.map, "click", () => {
+            infoWindow.close();
+          });
         });
-        this.pullTagData(event.tags);
       });
+  }
+
+  openFilterDialog(): void {
+    const dialogRef = this.dialog.open(FilterComponent, {
+      minHeight: "25vh",
+      maxWidth: "50vw",
+      maxHeight: "50vh",
+      data: {
+        allTags: this.tagList,
+        currentlyAppliedFilters: this.currentlyAppliedFilters
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      this.currentlyAppliedFilters = result;
+      this.getAndFilterEvents(null, result);
     });
   }
 
@@ -87,6 +121,7 @@ export class MapComponent implements OnInit, AfterViewInit {
       lat: eventGeoLocation.x,
       lng: eventGeoLocation.y
     });
+    this.map.setZoom(DEFAULT_DETAIL_ZOOM);
   }
 
   // TODO: get form data type
@@ -132,16 +167,49 @@ export class MapComponent implements OnInit, AfterViewInit {
       this._snackbar.open(createResponse.message, "", { duration: 5000 });
     });
     // retrieve events to keep list up to date
-    this.getAndFilterEvents();
-
-    // TODO: try and clean this up
-    this.events$.subscribe(() => {});
+    this.getAndFilterEvents().subscribe(events => {
+      const newEvent = events.find(event => event.title === formData.title);
+      if (newEvent !== null) {
+        this.markers.push(new google.maps.Marker({
+          position: { lat: newEvent!.geolocation?.x, lng: newEvent!.geolocation?.y },
+          title: newEvent!.title
+        }));
+      }
+      else {
+        this._snackbar.open("Error adding marker for new event. Please refresh page.", "", { duration: 5000 })
+      }
+    })
   }
 
-  private getAndFilterEvents() {
-    this.events$ = this._communityEventService.getEvents().pipe(
-      map(events => events.filter(event => this.isInPast(event.expiryDateTime)))
-    );
+  searchForEvent() {
+    this.getAndFilterEvents(this.searchQuery);
+  }
+
+  clearSearch() {
+    this.getAndFilterEvents();
+  }
+
+  private getAndFilterEvents(searchQuery?: string, tagFilter?: string[]): Observable<ICommunityEvent[]> {
+    if (tagFilter || searchQuery) {
+      if (searchQuery) {
+        console.log("filtering by search");
+        this.events$ = this._communityEventService.getEvents().pipe(
+          map(events => events.filter(event => this.isInPast(event.expiryDateTime) && event.title.toLowerCase().includes(searchQuery.toLowerCase())))
+        );
+      }
+      if (tagFilter) {
+        this.events$ = this._communityEventService.getEvents().pipe(
+          map(events => events.filter(event => this.isInPast(event.expiryDateTime))),
+          map(events => events.filter(event => tagFilter.every(filter => event.tags.includes(filter))))
+        );
+      }
+    }
+    else {
+      this.events$ = this._communityEventService.getEvents().pipe(
+        map(events => events.filter(event => this.isInPast(event.expiryDateTime)))
+      );
+    }
+    return this.events$;
   }
 
   private isInPast(date: Date): boolean {
@@ -173,8 +241,7 @@ export class MapComponent implements OnInit, AfterViewInit {
       try {
         // regex used to strip out whitespace
         // before converting to comma separated list
-        const tags = tagsInput.replace(/\s+/g, '').split(",");
-
+        const tags = tagsInput.replace(", ", ",").replace(' ', '-').split(",");
         // workaround sql fussiness around json data type
         return tags.map(tag => "\"" + tag + "\"")
       }
@@ -216,32 +283,41 @@ export class MapComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // pulls tags from an event and pushes into
-  // tagList after stripping out duplicates
+  // pushes tags from each event into an array
+  // then removes duplicates using a Set
   private pullTagData(tags: string[]): void {
-    let nonUniqueTags: string[] = [];
     tags.forEach(tag => {
-      nonUniqueTags.push(tag);
-      this.tagList = [...new Set(nonUniqueTags)]
-    })
+      this.tagList.push(tag);
+      this.tagList = [...new Set(this.tagList)]
+    });
   }
 
   private initMap(): void {
     this.map = new google.maps.Map(this.gmap.nativeElement, DEFAULT_MAP_OPTIONS);
   }
 
+  // TODO: uncomment actual code after fixing markers
   private constructInfoWindowHtml(event: ICommunityEvent): string {
-    return `
-    <div style="width:fit-content;height:fit-content;max-width:250px;max-height:150px;border-radius:4px;">
-      <h3 style="text-transform: capitalize;">${event.title}</h3>
-      ${event.description !== 'null' ? event.description : ""}
-      <br>
-      <a href="mailto:${event.contactEmail}">${event.contactEmail}<a/>
-      <br>
-      <a href="tel:${event.contactTelephone}">${event.contactTelephone}</a>
-      <br>
-      <a target="_blank" href="https://www.google.com/maps/dir/?api=1&desination=${event.geolocation.x},${event.geolocation.y}&dir_action=navigate">Directions</a>
-    </div>
-    `
+    if (event) {
+      return `
+      <div style="width:fit-content;height:fit-content;max-width:250px;max-height:150px;border-radius:4px;">
+        <h3 style="text-transform: capitalize;">${event.title}</h3>
+        ${event.description !== 'null' ? event.description : ""}
+        <br>
+        <a href="mailto:${event.contactEmail}">${event.contactEmail}<a/>
+        <br>
+        <a href="tel:${event.contactTelephone}">${event.contactTelephone}</a>
+        <br>
+        <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${event.geolocation.x},${event.geolocation.y}">Directions</a>
+        <br>
+        <br>
+        Start Time: ${new Date(event.startDateTime).toLocaleString('en-GB', { timeZone: 'BST' })}
+        <br>
+        End Time:  ${new Date(event.expiryDateTime).toLocaleString('en-GB', { timeZone: 'BST' })}
+      </div>
+      `
+    }
+
+    return `<span>Error constructing info window for event.</span>`;
   }
 }

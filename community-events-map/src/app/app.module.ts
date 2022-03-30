@@ -19,13 +19,17 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSelectModule } from '@angular/material/select';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialogModule } from '@angular/material/dialog';
+import { FilterComponent } from './filter/filter.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    MapComponent
+    MapComponent,
+    FilterComponent
   ],
   imports: [
     BrowserModule,
@@ -45,6 +49,9 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     MatSelectModule,
     MatSnackBarModule,
     ReactiveFormsModule,
+    FormsModule,
+    MatIconModule,
+    MatDialogModule,
     BrowserAnimationsModule,
     HttpClientModule
   ],

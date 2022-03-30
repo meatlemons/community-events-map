@@ -1,4 +1,8 @@
+// measurements
 $default-padding: 16px;
+
+// colours
+$darken-10: rgba(0, 0, 0, 0.1);
 
 #events-container {
     display: flex;
@@ -35,6 +39,30 @@ $default-padding: 16px;
         span {
             padding: 0 2px;
         }
+        mat-card-title {
+            padding-bottom: 8px;
+            .card-title {
+                float: left;
+            }
+            .event-filtering-controls {
+                float: right;
+                mat-icon {
+                    padding: 0 4px;
+                }
+            }
+        }
+        .search-bar {
+            display: flex;
+            margin-top: 32px;
+            .search-button, .clear-button {
+                margin-left: 4px;
+            }
+            input {
+                padding: 8px;
+                background-color: $darken-10;
+                border-radius: 4px;
+            }
+        }
         .event-list-item {
             height: fit-content;
             padding: 4px;
@@ -50,16 +78,6 @@ $default-padding: 16px;
             .event-description {
                 font-style: italic;
             }
-            .event-tags {
-                .tag-chip {
-                    display: inline-flex;
-                    border-radius: 4px;
-                    padding: 2px 8px;
-                    margin-right: 4px;
-                    background-color: darkgray;
-                    color: white;
-                }
-            }
         }
     }
     
@@ -71,6 +89,7 @@ $default-padding: 16px;
             min-height: 50vh;
             min-width: 400px;
         }
+        // support mobile view
         @media only screen and (max-width: 500px) {
             #map {
                 // this value is arbitrary

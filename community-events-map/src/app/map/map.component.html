@@ -126,18 +126,29 @@
             </mat-card-content>
         </mat-card>
     </div>
-    <!-- <div id="blog">
-        <mat-card>
-            <mat-card-title>
-                Blog
-            </mat-card-title>
-        </mat-card>
-    </div> -->
     <div id="events-list">
         <mat-card>
-            <mat-card-title>Upcoming Events</mat-card-title>
+            <mat-card-title>
+                <span class="card-title">Upcoming Events</span>
+                <div class="event-filtering-controls">
+                    <button class="filter-button" mat-icon-button (click)="openFilterDialog()">
+                        <mat-icon>filter_list</mat-icon>
+                    </button>
+                </div>
+            </mat-card-title>
+            <div class="search-bar">
+                <input matInput type="text" placeholder="Search by name or tags" name="searchQuery" [(ngModel)]="searchQuery" (keyup.enter)="searchForEvent()">
+                <button class="clear-button" mat-icon-button (click)="clearSearch()">
+                    <mat-icon>clear</mat-icon>
+                </button>
+                <button class="search-button" mat-icon-button (click)="searchForEvent()">
+                    <mat-icon>search</mat-icon>
+                </button>
+            </div>
             <mat-card-content class="upcoming-events-content">
                 <mat-selection-list [multiple]="false">
+                    <!--Uncomment first line, comment out second line to use mock data-->
+                    <!-- <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of mockEvents | async"> -->
                     <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of events$ | async">
                         <span class="event-title">
                             {{event.title}}

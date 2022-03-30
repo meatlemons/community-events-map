@@ -1,0 +1,22 @@
+<mat-card-title>
+    <span class="card-title">Filters</span>
+    <button class="filter-button" mat-icon-button (click)="onCloseClick()">
+        <mat-icon>clear</mat-icon>
+    </button>
+</mat-card-title>
+<div class="available-tags">
+    <h3>Available Tags</h3>
+    <mat-chip class="tag-chip all-tags" *ngFor="let tag of tags" [value]="tag" (click)="addToFilter(tag)" [disabled]="filter.indexOf(tag) !== -1">
+        {{tag}}
+    </mat-chip>
+</div>
+<div class="selected-tags">
+    <h3>Selected Filters</h3>
+    <mat-chip class="tag-chip" *ngFor="let tag of filter" [value]="tag" (click)="removeFromFilter(tag)">
+        {{tag}}
+    </mat-chip>
+</div>
+<div class="footer">
+    <button [disabled]="filter.length === 0"class="submit-button" mat-raised-button color="primary" (click)="onApplyClick()">Apply</button>
+    <button [disabled]="filter.length === 0"class="submit-button" mat-button color="primary" (click)="onCloseClick()">Clear</button>
+</div>
