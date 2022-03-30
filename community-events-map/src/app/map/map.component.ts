@@ -10,7 +10,9 @@ import { TIME_INPUT_VALIDATION } from './regex';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MOCK_EVENTS } from '../mocks/mock.data';
 import { MatDialog } from '@angular/material/dialog';
-import { FilterComponent } from '../filter/filter.component';
+import { FilterDialogComponent } from '../filter/filter-dialog.component';
+import { BST_HOURS_OFFSET, DIALOG_MAX_HEIGHT, DIALOG_MAX_WIDTH, DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH, SNACKBAR_DURATION_DEFAULT } from '../constants';
+import { DeleteDialogComponent } from '../delete-dialog/delete-dialog.component';
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
@@ -32,11 +34,11 @@ export class MapComponent implements OnInit, AfterViewInit {
     title: new FormControl('', Validators.required),
     startDate: new FormControl('', Validators.required),
     startTime: new FormControl('', [Validators.required, Validators.pattern(TIME_INPUT_VALIDATION)]),
-    endDate: new FormControl('', Validators.required),
-    endTime: new FormControl('', [Validators.required, Validators.pattern(TIME_INPUT_VALIDATION)]),
+    endDate: new FormControl({ value: '', disabled: true }, Validators.required),
+    endTime: new FormControl({ value: '', disabled: true }, [Validators.required, Validators.pattern(TIME_INPUT_VALIDATION)]),
     description: new FormControl(),
     email: new FormControl('', [Validators.required, Validators.email]),
-    phone: new FormControl('', Validators.required),
+    phone: new FormControl('', [Validators.required, Validators.minLength(11), Validators.maxLength(13)]),
     addressOne: new FormControl('', Validators.required),
     addressTwo: new FormControl(),
     city: new FormControl('', Validators.required),
@@ -45,7 +47,7 @@ export class MapComponent implements OnInit, AfterViewInit {
     tags: new FormControl()
   });
 
-  mockEvents = MOCK_EVENTS;
+  mockEvents$ = MOCK_EVENTS;
 
   constructor(
     private readonly _communityEventService: CommunityEventService,
@@ -87,10 +89,11 @@ export class MapComponent implements OnInit, AfterViewInit {
   }
 
   openFilterDialog(): void {
-    const dialogRef = this.dialog.open(FilterComponent, {
-      minHeight: "25vh",
-      maxWidth: "50vw",
-      maxHeight: "50vh",
+    const dialogRef = this.dialog.open(FilterDialogComponent, {
+      minHeight: DIALOG_MIN_HEIGHT,
+      maxHeight: DIALOG_MAX_HEIGHT,
+      minWidth: DIALOG_MIN_WIDTH,
+      maxWidth: DIALOG_MAX_WIDTH,
       data: {
         allTags: this.tagList,
         currentlyAppliedFilters: this.currentlyAppliedFilters
@@ -103,16 +106,22 @@ export class MapComponent implements OnInit, AfterViewInit {
     });
   }
 
+  openDeleteDialog(eventToDelete: ICommunityEvent): void {
+    const dialogRef = this.dialog.open(DeleteDialogComponent, {
+      data: eventToDelete
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      // only show a message if the call to delete API is made 
+      if (result) {
+        this._snackbar.open(result, "", { duration: SNACKBAR_DURATION_DEFAULT });
+        this.getAndFilterEvents();
+      }
+    })
+  }
+
   ngAfterViewInit(): void {
     this.initMap();
-  }
-
-  onUpdateClick(eventId: string, value: ICommunityEvent): void {
-    this._communityEventService.updateEvent(eventId, value);
-  }
-
-  onDeleteClick(eventId: string): void {
-    this._communityEventService.deleteEvent(eventId);
   }
 
   // called on list item click
@@ -138,17 +147,28 @@ export class MapComponent implements OnInit, AfterViewInit {
 
     const geolocation: IPoint = await this.addressToLatLng(address);
 
+    console.log("start time: ", startTime.hours + ":" + startTime.minutes);
+    console.log("end time:   ", endTime.hours + ":" + endTime.minutes);
+
     // workaround mat date picker limitation
     // by setting hours/minutes using above values
-    formData.startDate.setHours(startTime.hours);
-    formData.startDate.setMinutes(startTime.minutes);
-    formData.endDate.setHours(endTime.hours);
-    formData.endDate.setMinutes(endTime.minutes);
+    // hacky workaround to account for timezone shift 
+    // in conversion to mySQL DATETIME
+    // (1 hour each way, presumably due to UTC vs BST)
+    formData.startDate.setHours(startTime.hours, startTime.minutes);
+    formData.endDate.setHours(endTime.hours, startTime.minutes);
 
     // validate date/times
     if (formData.startDate > formData.endDate) {
-      this._snackbar.open("Start Date can't be before end date. Setting expiry date to 24h from start date.");
-      formData.endDate = new Date(formData.endDate.setDate(formData.endDate.getDate() + 1));
+      this._snackbar.open("Start Date/Time must be before End Date/Time. Please update the form.");
+      this.eventsForm.setErrors( { incorrect: true });
+      return new Promise<void>(null);
+    }
+
+    if (Math.floor(new Date(formData.startDate).getTime()) < Date.now()) {
+      this._snackbar.open("Start Date/Time can't be in the past. Please update the form.");
+      this.eventsForm.setErrors( { incorrect: true });
+      return new Promise<void>(null);
     }
 
     const createRequest: ICommunityEventCreateRequest = {
@@ -162,37 +182,64 @@ export class MapComponent implements OnInit, AfterViewInit {
       tags
     };
 
+    console.log("create request: ", createRequest);
+
     // call create service
     this._communityEventService.createEvent(createRequest).subscribe(createResponse => {
-      this._snackbar.open(createResponse.message, "", { duration: 5000 });
+      this._snackbar.open(`${createResponse.message}! Please refresh to update the map.`, "", { duration: SNACKBAR_DURATION_DEFAULT });
+      this.getAndFilterEvents().subscribe(events => {
+        const newEvent = events.find(event => event.title === formData.title);
+        console.log("new event: ", newEvent);
+        if (newEvent) {
+          setTimeout(() => { this.markers.push(new google.maps.Marker({
+              position: { lat: createRequest.geolocation?.x, lng: createRequest.geolocation?.y },
+              title: createRequest.title,
+              map: this.map
+            }));
+            // it'd be best to factor this out into its own method
+            // instead of repeating the code from ngOnInit
+            // but I'm keeping it this way due to time constraints
+            const marker = this.markers.find(marker => marker.getTitle() === newEvent.title);
+            const newInfoWindow = new google.maps.InfoWindow({ content: this.constructInfoWindowHtml(newEvent) });
+            marker.setMap(this.map); // not needed?
+            marker.addListener("click", () => {
+              newInfoWindow.open({
+                anchor: marker,
+                map: this.map,
+                shouldFocus: false
+              })
+            });
+            // close all info windows when the map is clicked
+            google.maps.event.addListener(this.map, "click", () => {
+              newInfoWindow.close();
+            });
+          }, 0);
+        }
+        else {
+          this._snackbar.open("Error adding marker for new event. Please refresh page.", "", { duration: SNACKBAR_DURATION_DEFAULT })
+        }
+      });
     });
-    // retrieve events to keep list up to date
-    this.getAndFilterEvents().subscribe(events => {
-      const newEvent = events.find(event => event.title === formData.title);
-      if (newEvent !== null) {
-        this.markers.push(new google.maps.Marker({
-          position: { lat: newEvent!.geolocation?.x, lng: newEvent!.geolocation?.y },
-          title: newEvent!.title
-        }));
-      }
-      else {
-        this._snackbar.open("Error adding marker for new event. Please refresh page.", "", { duration: 5000 })
-      }
-    })
   }
 
   searchForEvent() {
     this.getAndFilterEvents(this.searchQuery);
+    this.searchQuery = "";
   }
 
   clearSearch() {
     this.getAndFilterEvents();
   }
 
+  enableEndDateTimeFields(): void {
+    const controls = this.eventsForm.controls;
+    controls.endDate.enable();
+    controls.endTime.enable();
+  }
+
   private getAndFilterEvents(searchQuery?: string, tagFilter?: string[]): Observable<ICommunityEvent[]> {
     if (tagFilter || searchQuery) {
       if (searchQuery) {
-        console.log("filtering by search");
         this.events$ = this._communityEventService.getEvents().pipe(
           map(events => events.filter(event => this.isInPast(event.expiryDateTime) && event.title.toLowerCase().includes(searchQuery.toLowerCase())))
         );
@@ -214,6 +261,10 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   private isInPast(date: Date): boolean {
     return Math.floor(new Date(date).getTime()) > Date.now();
+  }
+
+  private compareDates(startDate: Date, endDate: Date): boolean {
+    return startDate > endDate;
   }
 
   private splitHoursMinutes(time: string): ITime {
@@ -254,6 +305,11 @@ export class MapComponent implements OnInit, AfterViewInit {
   }
 
   private mySqlDateConverter(date: Date): string {
+    // offset one hour between UTC and BST
+    // at full scale, the application
+    // would detect the user's locale
+    // and handle accordingly
+    date.setHours(date.getHours() + BST_HOURS_OFFSET);
     return new Date(date).toISOString().slice(0, 19).replace('T', ' ');
   }
 
@@ -296,7 +352,6 @@ export class MapComponent implements OnInit, AfterViewInit {
     this.map = new google.maps.Map(this.gmap.nativeElement, DEFAULT_MAP_OPTIONS);
   }
 
-  // TODO: uncomment actual code after fixing markers
   private constructInfoWindowHtml(event: ICommunityEvent): string {
     if (event) {
       return `
@@ -311,13 +366,12 @@ export class MapComponent implements OnInit, AfterViewInit {
         <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${event.geolocation.x},${event.geolocation.y}">Directions</a>
         <br>
         <br>
-        Start Time: ${new Date(event.startDateTime).toLocaleString('en-GB', { timeZone: 'BST' })}
+        Start Time: ${new Date(event.startDateTime).toUTCString()}
         <br>
-        End Time:  ${new Date(event.expiryDateTime).toLocaleString('en-GB', { timeZone: 'BST' })}
+        End Time:  ${new Date(event.expiryDateTime).toUTCString()}
       </div>
       `
     }
-
     return `<span>Error constructing info window for event.</span>`;
   }
 }

@@ -23,13 +23,15 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
-import { FilterComponent } from './filter/filter.component';
+import { FilterDialogComponent } from './filter/filter-dialog.component';
+import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MapComponent,
-    FilterComponent
+    FilterDialogComponent,
+    DeleteDialogComponent
   ],
   imports: [
     BrowserModule,

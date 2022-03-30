@@ -22,23 +22,23 @@
 
                     <mat-form-field appearance="fill" class="start-date">
                         <mat-label>Start Date</mat-label>
-                        <input formControlName="startDate" required matInput [matDatepicker]="startPicker" [min]="minDate"/>
+                        <input readonly formControlName="startDate" required matInput [matDatepicker]="startPicker" [min]="minDate"/>
                         <mat-error *ngIf="eventsForm.controls.startDate.hasError('required')">Required</mat-error>
                         <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-                        <mat-datepicker #startPicker></mat-datepicker>
+                        <mat-datepicker #startPicker (dateInput)="enableEndDateTimeFields()"></mat-datepicker>
                     </mat-form-field>
                     <mat-form-field appearance="fill" class="start-time">
                         <mat-label>Start Time</mat-label>
-                        <input formControlName="startTime" required matInput type="text" placeholder="e.g. 13:00" placeholder="e.g. 13:00"/>
+                        <input (input)="enableEndDateTimeFields()" formControlName="startTime" required matInput type="text" placeholder="e.g. 13:00" placeholder="e.g. 13:00"/>
                         <mat-error *ngIf="eventsForm.controls.startTime.hasError('required')">Required</mat-error>
                         <mat-error *ngIf="eventsForm.controls.startTime.hasError('pattern')">Please use HH:MM format</mat-error>
                     </mat-form-field>
 
                     <br>
 
-                    <mat-form-field appearance="fill" class="end-date">
+                    <mat-form-field appearance="fill" class="end-date" disabled="!eventsForm.controls.startDate.valid">
                         <mat-label>End Date</mat-label>
-                        <input formControlName="endDate" required matInput [matDatepicker]="endPicker" [min]="eventsForm.controls.startDate.value || minDate" />
+                        <input readonly formControlName="endDate" required matInput [matDatepicker]="endPicker" [min]="eventsForm.controls.startDate.value || minDate" />
                         <mat-error *ngIf="eventsForm.controls.endDate.hasError('required')">Required</mat-error>
                         <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
                         <mat-datepicker #endPicker></mat-datepicker>
@@ -73,6 +73,8 @@
                         <mat-label>Contact Phone</mat-label>
                         <input formControlName="phone" required matInput type="tel" placeholder="+447123456789" />
                         <mat-error *ngIf="eventsForm.controls.phone.hasError('required')">Required</mat-error>
+                        <mat-error *ngIf="eventsForm.controls.phone.hasError('minlength')">Phone number should be at least 11 characters long</mat-error>
+                        <mat-error *ngIf="eventsForm.controls.phone.hasError('maxlength')">Phone number should be a maximum of 13 characters long</mat-error>
                     </mat-form-field>
 
                     <label>
@@ -148,10 +150,13 @@
             <mat-card-content class="upcoming-events-content">
                 <mat-selection-list [multiple]="false">
                     <!--Uncomment first line, comment out second line to use mock data-->
-                    <!-- <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of mockEvents | async"> -->
+                    <!-- <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of mockEvents$ | async"> -->
                     <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of events$ | async">
                         <span class="event-title">
                             {{event.title}}
+                            <button mat-icon-button class="delete-event-button" (click)="openDeleteDialog(event)">
+                                <mat-icon>delete</mat-icon>
+                            </button>
                         </span>
                         <span *ngIf="event.description != 'null'" class="event-description">
                             "{{event.description }}"

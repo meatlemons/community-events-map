@@ -1,0 +1,18 @@
+<mat-card-title class="dialog-panel">
+    <span class="card-title">Delete Event</span>
+    <button class="filter-button" mat-icon-button (click)="onCloseClick()">
+        <mat-icon>clear</mat-icon>
+    </button>
+</mat-card-title>
+<br>
+<div class="message-container">
+    <span class="delete-confirmation-message">Are you sure you want to delete 
+        <span class="delete-confirmation-message--event-title">
+            {{ eventToDelete.title }}?
+        </span>
+    </span>
+</div>
+<div class="footer">
+    <button [disabled]="(enableDeleteButton() | async)" class="confirm-button" mat-raised-button color="primary" (click)="onConfirmClick()">Confirm</button>
+    <button class="back-button" mat-button color="primary" (click)="onCloseClick()">No thanks</button>
+</div>

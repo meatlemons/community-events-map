@@ -1,0 +1,12 @@
+$message-margin: 32px;
+
+.message-container {
+    // margin-top: 48px;
+    margin-top: $message-margin;
+    margin-bottom: $message-margin;
+    .delete-confirmation-message {
+        .delete-confirmation-message--event-title {
+            text-transform: capitalize;
+        }
+    }
+}

@@ -19,7 +19,6 @@ const connection = mysql.createConnection({
 const ERROR_MESSAGES = {
     create: "Something went wrong while creating an event: ",
     read: "Something went wrong while getting events: ",
-    update: "Something went wrong while updating an event: ",
     delete: "Something went wrong while deleting an event: "
 };
 
@@ -59,6 +58,7 @@ app.get('/api/events', (req, res) => {
                 result,
                 ...DEFAULT_SUCCESS_RESPONSE
             }
+            // console.log(JSON.stringify(result));
             res.status(200).json(response);
         }
     });
@@ -66,8 +66,8 @@ app.get('/api/events', (req, res) => {
 
 // create event
 app.post('/api/event', (req, res) => {
-    console.log(JSON.stringify(req.body));
     console.log(`
+    Creating a new event with:\n
     ${req.body.title},
     ${req.body.startDateTime},
     ${req.body.expiryDateTime},
@@ -114,6 +114,32 @@ app.post('/api/event', (req, res) => {
     });
 });
 
+// delete an event
+app.delete('/api/event', (req, res) => {
+    const eventId = req.query.eventId;
+    console.log(`Event with ID ${eventId} queued for deletion.`);
+
+    const DELETE_EVENT = `
+    DELETE FROM events
+        WHERE eventID = ${eventId}
+    `;
+    let response;
+    connection.query(DELETE_EVENT, function(err, result) {
+        if (err) {
+            response = {
+                code: -1,
+                message: ERROR_MESSAGES.delete + err
+            }
+            console.log(response);
+            res.status(500).json(response);
+        } else {
+            response = DEFAULT_SUCCESS_RESPONSE;
+            console.log(response);
+            res.status(200).json(response);
+        }
+    })
+});
+
 app.listen(port, () => {
   console.log(`Listening on ${port}`)
-})
+});

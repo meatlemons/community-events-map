@@ -12,3 +12,17 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     background-color: darkgray;
     color: white;
 }
+
+.dialog-panel {
+    padding-bottom: 8px;
+    .card-title {
+        margin-top: 8px;
+        float: left;
+    }
+    .filter-button {
+        float: right;
+        mat-icon {
+            padding: 0 4px;
+        }
+    }
+}

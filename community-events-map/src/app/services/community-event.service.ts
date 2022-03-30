@@ -3,6 +3,7 @@ import { ICommunityEvent, ICommunityEventCreateRequest, ICommunityEventListRespo
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators'
+import { BST_HOURS_OFFSET } from '../constants';
 
 @Injectable({
   providedIn: 'root'
@@ -33,8 +34,8 @@ export class CommunityEventService {
               return {
                 Id: event.EventID,
                 title: event.EventTitle,
-                startDateTime: event.StartDateTime,
-                expiryDateTime: event.ExpiryDateTime,
+                startDateTime: new Date(new Date(event.StartDateTime).setHours(new Date(event.StartDateTime).getHours() + BST_HOURS_OFFSET)),
+                expiryDateTime: new Date(new Date(event.ExpiryDateTime).setHours(new Date(event.ExpiryDateTime).getHours() + BST_HOURS_OFFSET)),
                 description: event.Description,
                 contactEmail: event.ContactEmail,
                 contactTelephone: event.ContactTelephone,
@@ -53,7 +54,7 @@ export class CommunityEventService {
   }
 
   deleteEvent(eventId: string): Observable<IGenericRESTResponse> {
-    const endpoint = `/event/${eventId}`;
+    const endpoint = `/event?eventId=${eventId}`;
 
     return this.http.delete<IGenericRESTResponse>(this.root + endpoint);
   }

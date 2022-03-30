@@ -39,6 +39,15 @@ $darken-10: rgba(0, 0, 0, 0.1);
         span {
             padding: 0 2px;
         }
+        mat-card {
+            max-height: 50vh;
+            overflow: auto;
+        }
+        @media only screen and (max-width: 500px) {
+            mat-card {
+                max-height: 25vh;
+            }
+        }
         mat-card-title {
             padding-bottom: 8px;
             .card-title {
@@ -66,6 +75,10 @@ $darken-10: rgba(0, 0, 0, 0.1);
         .event-list-item {
             height: fit-content;
             padding: 4px;
+            .delete-event-button {
+                float: right;
+                
+            }
             span {
                 display: block;
                 width: inherit;
