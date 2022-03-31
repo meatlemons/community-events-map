@@ -19,7 +19,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
         margin-top: 8px;
         float: left;
     }
-    .filter-button {
+    .filter-button, .filter-clear-icon {
         float: right;
         mat-icon {
             padding: 0 4px;

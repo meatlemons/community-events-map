@@ -2,6 +2,10 @@ import { FormControl, Validators } from "@angular/forms";
 import { TIME_INPUT_VALIDATION } from "./map/regex";
 
 // timezones
+// only BST is used, but this is an example
+// of how the app could handle timezones
+// in the future without having to use
+// a library like Moment.js
 export const BST_HOURS_OFFSET = 1;
 export const EST_HOURS_OFFSET = -5;
 export const PST_HOURS_OFFSET = -8;
