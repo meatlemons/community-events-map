@@ -106,12 +106,13 @@ export class MapComponent implements OnInit, AfterViewInit {
     this.searchQuery = "";
   }
 
-  clearSearch() {
+  clearSearchFiltersSort() {
     this.searchQuery = "";
     this.currentlyAppliedFilters = [];
     this.centerOnUserLocation();
     this.eventList.deselectAll();
     this.getAndFilterEvents();
+    this.reverseSort = false;
   }
 
   enableEndDateTimeFields(): void {

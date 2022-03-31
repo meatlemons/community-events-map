@@ -143,7 +143,7 @@
             </mat-card-title>
             <div class="search-bar">
                 <input matInput type="text" placeholder="Search by name" name="searchQuery" [(ngModel)]="searchQuery" (keyup.enter)="searchForEvent()">
-                <button class="clear-button" mat-icon-button mat-icon-button matTooltip="Clear filtering and sorting" [matTooltipPosition]="'left'" (click)="clearSearch()">
+                <button class="clear-button" mat-icon-button mat-icon-button matTooltip="Clear filtering and sorting" [matTooltipPosition]="'left'" (click)="clearSearchFiltersSort()">
                     <mat-icon>clear</mat-icon>
                 </button>
                 <button class="search-button" mat-icon-button mat-icon-button matTooltip="Search" [matTooltipPosition]="'right'" (click)="searchForEvent()">
