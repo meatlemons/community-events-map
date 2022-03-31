@@ -65,9 +65,6 @@ $darken-04: rgba(0, 0, 0, .04);
         .search-bar {
             display: flex;
             margin-top: 32px;
-            .search-button, .clear-button {
-                margin-left: 4px;
-            }
             input {
                 padding: 8px;
                 background-color: $darken-04;
