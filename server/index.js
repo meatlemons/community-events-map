@@ -67,7 +67,6 @@ app.get('/api/events', (req, res) => {
 
 // create an event
 app.post('/api/event', (req, res) => {
-    console.log(`Creating a new event with the following query:\n${CREATE_EVENT}`);
     const CREATE_EVENT = `
     INSERT INTO events (
         EventTitle, 
@@ -90,6 +89,7 @@ app.post('/api/event', (req, res) => {
         '[${req.body.tags}]'
     )
     `;
+    console.log(`Creating a new event with the following query:\n${CREATE_EVENT}`);
     let response;
     connection.query(CREATE_EVENT, function(err, result) {
         if(err) {

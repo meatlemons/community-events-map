@@ -25,6 +25,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FilterDialogComponent } from './filter/filter-dialog.component';
 import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @NgModule({
   declarations: [
@@ -54,6 +55,7 @@ import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
     FormsModule,
     MatIconModule,
     MatDialogModule,
+    MatTooltipModule,
     BrowserAnimationsModule,
     HttpClientModule
   ],

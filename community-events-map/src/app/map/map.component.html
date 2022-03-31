@@ -133,31 +133,42 @@
             <mat-card-title>
                 <span class="card-title">Upcoming Events</span>
                 <div class="event-filtering-controls">
-                    <button class="filter-button" mat-icon-button (click)="openFilterDialog()">
+                    <button class="filter-button" mat-icon-button matTooltip="Filtering" [matTooltipPosition]="'above'" (click)="openFilterDialog()">
                         <mat-icon>filter_list</mat-icon>
+                    </button>
+                    <button class="filter-button" mat-icon-button matTooltip="Sort" [matTooltipPosition]="'above'" (click)="sortEvents()">
+                        <mat-icon>sort_by_alpha</mat-icon>
                     </button>
                 </div>
             </mat-card-title>
             <div class="search-bar">
-                <input matInput type="text" placeholder="Search by name or tags" name="searchQuery" [(ngModel)]="searchQuery" (keyup.enter)="searchForEvent()">
-                <button class="clear-button" mat-icon-button (click)="clearSearch()">
+                <input matInput type="text" placeholder="Search by name" name="searchQuery" [(ngModel)]="searchQuery" (keyup.enter)="searchForEvent()">
+                <button class="clear-button" mat-icon-button mat-icon-button matTooltip="Clear filtering and sorting" [matTooltipPosition]="'left'" (click)="clearSearch()">
                     <mat-icon>clear</mat-icon>
                 </button>
-                <button class="search-button" mat-icon-button (click)="searchForEvent()">
+                <button class="search-button" mat-icon-button mat-icon-button matTooltip="Search" [matTooltipPosition]="'right'" (click)="searchForEvent()">
                     <mat-icon>search</mat-icon>
                 </button>
             </div>
             <mat-card-content class="upcoming-events-content">
-                <mat-selection-list [multiple]="false">
-                    <!--Uncomment first line, comment out second line to use mock data-->
-                    <!-- <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of mockEvents$ | async"> -->
-                    <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of events$ | async">
-                        <span class="event-title">
-                            {{event.title}}
-                            <button mat-icon-button class="delete-event-button" (click)="openDeleteDialog(event)">
-                                <mat-icon>delete</mat-icon>
-                            </button>
-                        </span>
+                <mat-selection-list [multiple]="false" [disableRipple]="true" #eventList>
+                    <!--Uncomment first line, comment out second line to use mock data
+                        Note that this disables filtering of the list (as using mock data makes it static(
+                        However, the map will still update based on filtering
+                        ))
+                    -->
+                    <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of mockEvents$ | async">
+                    <!-- <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of events$ | async"> -->
+                        <div class="event-title-container">
+                            <div class="event-title">
+                                {{event.title}}
+                            </div>
+                            <div class="delete-event-button-container">
+                                <button mat-icon-button class="delete-event-button" mat-icon-button matTooltip="Delete Event" [matTooltipPosition]="'left'" (click)="openDeleteDialog(event)">
+                                    <mat-icon>delete</mat-icon>
+                                </button>
+                            </div>
+                        </div>
                         <span *ngIf="event.description != 'null'" class="event-description">
                             "{{event.description }}"
                         </span>
@@ -166,6 +177,8 @@
                                 {{tag}}
                             </mat-chip>
                         </span>
+                        <br>
+                        <mat-divider></mat-divider>
                     </mat-list-option>
                 </mat-selection-list>
             </mat-card-content>

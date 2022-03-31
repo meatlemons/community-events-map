@@ -1,8 +1,8 @@
 export interface ICommunityEvent {
     readonly Id: number 
     title: string
-    startDateTime: Date
-    expiryDateTime: Date
+    startDateTime: Date | string
+    expiryDateTime: Date | string
     description: string
     contactEmail: string
     contactTelephone: string

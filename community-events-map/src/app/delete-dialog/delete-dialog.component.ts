@@ -32,7 +32,7 @@ export class DeleteDialogComponent {
     try {
       this._communityEventService.deleteEvent(this.eventToDelete.Id.toString()).subscribe(deleteResponse => {
         if (deleteResponse.message === "Success") {
-          this.dialogRef.close(`${deleteResponse.message}: Deleted Event ${this.eventToDelete.title}`);
+          this.dialogRef.close(`${deleteResponse.message}: Deleted Event "${this.eventToDelete.title}"`);
         } else {
           this.dialogRef.close(`Delete Event failed with: ${deleteResponse.message}`);
         }

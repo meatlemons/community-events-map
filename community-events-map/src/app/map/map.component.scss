@@ -40,12 +40,14 @@ $darken-04: rgba(0, 0, 0, .04);
             padding: 0 2px;
         }
         mat-card {
+            max-width: 40vw;
             max-height: 50vh;
             overflow: auto;
         }
         @media only screen and (max-width: 500px) {
             mat-card {
                 max-height: 25vh;
+                max-width: 100vw;
             }
         }
         mat-card-title {
@@ -75,18 +77,32 @@ $darken-04: rgba(0, 0, 0, .04);
         .event-list-item {
             height: fit-content;
             padding: 4px;
-            .delete-event-button {
-                float: right;
-                
-            }
             span {
                 display: block;
                 width: inherit;
                 margin-top: 8px;
             }
-            .event-title {
+            ::ng-deep {
+                .mat-list-item-content {
+                    padding-right: 4px;
+                    padding-left: 4px;
+                }
+                .mat-list-text {
+                    padding-right: 0;
+                }
+            }
+            .event-title-container {
                 font-weight: bold;
                 text-transform: capitalize;
+                .event-title {
+                    width: fit-content;
+                    margin-top: 8px;
+                    display: inline-block;
+                }
+                .delete-event-button-container {
+                    display: inline;
+                    float: right;
+                }
             }
             .event-description {
                 font-style: italic;
@@ -95,7 +111,7 @@ $darken-04: rgba(0, 0, 0, .04);
     }
     
     #map-container {
-        flex-grow: 4;
+        flex-grow: 99;
         padding: $default-padding;
         #map {
             padding: $default-padding;

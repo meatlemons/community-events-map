@@ -11,8 +11,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MOCK_EVENTS } from '../mocks/mock.data';
 import { MatDialog } from '@angular/material/dialog';
 import { FilterDialogComponent } from '../filter/filter-dialog.component';
-import { BST_HOURS_OFFSET, DIALOG_MAX_HEIGHT, DIALOG_MAX_WIDTH, DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH, SNACKBAR_DURATION_DEFAULT } from '../constants';
+import { BST_HOURS_OFFSET, DEFAULT_FORM_STATE, DIALOG_MAX_HEIGHT, DIALOG_MAX_WIDTH, DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH, SNACKBAR_DURATION_DEFAULT } from '../constants';
 import { DeleteDialogComponent } from '../delete-dialog/delete-dialog.component';
+import { TooltipPosition } from '@angular/material/tooltip';
+import { MatSelectionList } from '@angular/material/list';
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
@@ -20,6 +22,7 @@ import { DeleteDialogComponent } from '../delete-dialog/delete-dialog.component'
 })
 export class MapComponent implements OnInit, AfterViewInit {
   @ViewChild('map', { static: false }) gmap: ElementRef;
+  @ViewChild('eventList') eventList: MatSelectionList;
 
   events$: Observable<ICommunityEvent[]>;
   map: google.maps.Map;
@@ -30,22 +33,9 @@ export class MapComponent implements OnInit, AfterViewInit {
   searchQuery: string;
   searchResults$: Observable<ICommunityEvent[]>;
   currentlyAppliedFilters: string[];
-  eventsForm: FormGroup = new FormGroup({
-    title: new FormControl('', Validators.required),
-    startDate: new FormControl('', Validators.required),
-    startTime: new FormControl('', [Validators.required, Validators.pattern(TIME_INPUT_VALIDATION)]),
-    endDate: new FormControl({ value: '', disabled: true }, Validators.required),
-    endTime: new FormControl({ value: '', disabled: true }, [Validators.required, Validators.pattern(TIME_INPUT_VALIDATION)]),
-    description: new FormControl(),
-    email: new FormControl('', [Validators.required, Validators.email]),
-    phone: new FormControl('', [Validators.required, Validators.minLength(11), Validators.maxLength(13)]),
-    addressOne: new FormControl('', Validators.required),
-    addressTwo: new FormControl(),
-    city: new FormControl('', Validators.required),
-    county: new FormControl('', Validators.required),
-    postCode: new FormControl('', Validators.required),
-    tags: new FormControl()
-  });
+  reverseSort: boolean = false;
+  tooltipPositionOptions: TooltipPosition[];
+  eventsForm: FormGroup = new FormGroup(DEFAULT_FORM_STATE);
 
   mockEvents$ = MOCK_EVENTS;
 
@@ -56,36 +46,12 @@ export class MapComponent implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
-    this.getAndFilterEvents()
-      .subscribe(events => {
-        this.markers = [];
-        events.forEach(event => {
-          this.markers.push(new google.maps.Marker({
-            position: { lat: event.geolocation?.x, lng: event.geolocation?.y },
-            title: event.title
-          }));
-          // store tags for use in filtering
-          this.pullTagData(event.tags);
-        });
+    this.getAndFilterEvents();
+  }
 
-        this.markers.forEach(marker => {
-          // set up info windows
-          const communityEvent = events.find(event => event.title === marker.getTitle());
-          const infoWindow = new google.maps.InfoWindow({ content: this.constructInfoWindowHtml(communityEvent!) });
-          marker.setMap(this.map) // not needed?
-          marker.addListener("click", () => {
-            infoWindow.open({
-              anchor: marker,
-              map: this.map,
-              shouldFocus: false
-            });
-          });
-          // close all info windows when the map is clicked
-          google.maps.event.addListener(this.map, "click", () => {
-            infoWindow.close();
-          });
-        });
-      });
+  ngAfterViewInit(): void {
+    this.initMap();
+    this.centerOnUserLocation();
   }
 
   openFilterDialog(): void {
@@ -101,8 +67,12 @@ export class MapComponent implements OnInit, AfterViewInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      this.currentlyAppliedFilters = result;
-      this.getAndFilterEvents(null, result);
+      if (result && result.length !== 0) {
+        this.currentlyAppliedFilters = result;
+        this.getAndFilterEvents(null, result); 
+      } else {
+        this.getAndFilterEvents();
+      }
     });
   }
 
@@ -115,13 +85,10 @@ export class MapComponent implements OnInit, AfterViewInit {
       // only show a message if the call to delete API is made 
       if (result) {
         this._snackbar.open(result, "", { duration: SNACKBAR_DURATION_DEFAULT });
+        this.centerOnUserLocation();
         this.getAndFilterEvents();
       }
     })
-  }
-
-  ngAfterViewInit(): void {
-    this.initMap();
   }
 
   // called on list item click
@@ -139,6 +106,10 @@ export class MapComponent implements OnInit, AfterViewInit {
   }
 
   clearSearch() {
+    this.searchQuery = "";
+    this.currentlyAppliedFilters = [];
+    this.centerOnUserLocation();
+    this.eventList.deselectAll();
     this.getAndFilterEvents();
   }
 
@@ -146,6 +117,29 @@ export class MapComponent implements OnInit, AfterViewInit {
     const controls = this.eventsForm.controls;
     controls.endDate.enable();
     controls.endTime.enable();
+  }
+
+  sortEvents(): void {
+    this.events$ = this.events$.pipe(map(events => events.sort((a, b) => {
+      if (a.title < b.title) {
+        if (this.reverseSort) {
+          return -1;
+        }
+        else {
+          return 1;
+        }
+      }
+      if (a.title > b.title) {
+        if (this.reverseSort) {
+          return 1;
+        } else {
+          return -1;
+        }
+      }
+      return 0;
+    })));
+    // invert bool after each sort
+    this.reverseSort = !this.reverseSort;
   }
 
   async submitForm(): Promise<void> {
@@ -191,38 +185,12 @@ export class MapComponent implements OnInit, AfterViewInit {
 
     // call create service
     this._communityEventService.createEvent(createRequest).subscribe(createResponse => {
-      this._snackbar.open(`${createResponse.message}! Please refresh to update the map.`, "", { duration: SNACKBAR_DURATION_DEFAULT });
-      this.getAndFilterEvents().subscribe(events => {
-        const newEvent = events.find(event => event.title === formData.title);
-        if (newEvent) {
-          setTimeout(() => { this.markers.push(new google.maps.Marker({
-              position: { lat: createRequest.geolocation?.x, lng: createRequest.geolocation?.y },
-              title: createRequest.title,
-              map: this.map
-            }));
-            // it'd be best to factor this out into its own method
-            // instead of repeating the code from ngOnInit
-            // but I'm keeping it this way due to time constraints
-            const marker = this.markers.find(marker => marker.getTitle() === newEvent.title);
-            const newInfoWindow = new google.maps.InfoWindow({ content: this.constructInfoWindowHtml(newEvent) });
-            marker.setMap(this.map); // not needed?
-            marker.addListener("click", () => {
-              newInfoWindow.open({
-                anchor: marker,
-                map: this.map,
-                shouldFocus: false
-              })
-            });
-            // close all info windows when the map is clicked
-            google.maps.event.addListener(this.map, "click", () => {
-              newInfoWindow.close();
-            });
-          }, 0);
-        }
-        else {
-          this._snackbar.open("Error adding marker for new event. Please refresh page.", "", { duration: SNACKBAR_DURATION_DEFAULT })
-        }
-      });
+      this._snackbar.open(`${createResponse.message}!`, "", { duration: SNACKBAR_DURATION_DEFAULT });
+      // call get to refresh list with new event
+      this.getAndFilterEvents(null, this.currentlyAppliedFilters).subscribe(() => {});
+      // clear form and reset validation
+      // annoyingly this triggers validation
+      this.eventsForm.reset();
     });
   }
 
@@ -233,27 +201,66 @@ export class MapComponent implements OnInit, AfterViewInit {
           map(events => events.filter(event => this.isInPast(event.expiryDateTime) && event.title.toLowerCase().includes(searchQuery.toLowerCase())))
         );
       }
-      if (tagFilter) {
+      if (tagFilter && tagFilter.length !== 0) {
         this.events$ = this._communityEventService.getEvents().pipe(
           map(events => events.filter(event => this.isInPast(event.expiryDateTime))),
-          map(events => events.filter(event => tagFilter.every(filter => event.tags.includes(filter))))
+          map(events => events.filter(event => tagFilter.some(filter => event.tags.includes(filter))))
         );
       }
+      this.centerOnUserLocation();
+      this.eventList.deselectAll();
     }
     else {
       this.events$ = this._communityEventService.getEvents().pipe(
         map(events => events.filter(event => this.isInPast(event.expiryDateTime)))
       );
     }
+    this.events$.subscribe(events => { 
+      setTimeout(() => {
+        this.markers.forEach(marker => {
+          marker.setMap(null);
+        })
+        this.markers = [];
+        events.forEach(event => {
+          this.markers.push(new google.maps.Marker({
+            position: { lat: event.geolocation?.x, lng: event.geolocation?.y },
+            title: event.title
+          }));
+          // store tags for use in filtering
+          this.pullTagData(event.tags);
+        });
+
+        this.markers.forEach(marker => {
+          // set up info windows
+          const communityEvent = events.find(event => event.title === marker.getTitle());
+          const infoWindow = new google.maps.InfoWindow({ content: this.constructInfoWindowHtml(communityEvent!) });
+          marker.setMap(this.map) // not needed?
+          marker.addListener("click", () => {
+            infoWindow.open({
+              anchor: marker,
+              map: this.map,
+              shouldFocus: false
+            });
+          });
+          // close all info windows when the map is clicked
+          google.maps.event.addListener(this.map, "click", () => {
+            infoWindow.close();
+          });
+        });
+        if (events.length === 1) {
+          this.map.setCenter({
+            lat: events[0].geolocation.x,
+            lng: events[0].geolocation.y
+          });
+          this.map.setZoom(DEFAULT_DETAIL_ZOOM);
+        }
+      }, 0);
+    });
     return this.events$;
   }
 
-  private isInPast(date: Date): boolean {
+  private isInPast(date: Date | string): boolean {
     return Math.floor(new Date(date).getTime()) > Date.now();
-  }
-
-  private compareDates(startDate: Date, endDate: Date): boolean {
-    return startDate > endDate;
   }
 
   private splitHoursMinutes(time: string): ITime {
@@ -279,9 +286,7 @@ export class MapComponent implements OnInit, AfterViewInit {
   private tagsInputToArray(tagsInput: string): string[] {
     if (tagsInput !== null && tagsInput !== "") {
       try {
-        // regex used to strip out whitespace
-        // before converting to comma separated list
-        const tags = tagsInput.replace(", ", ",").replace(' ', '-').split(",");
+        const tags = tagsInput.split(",");
         // workaround sql fussiness around json data type
         return tags.map(tag => "\"" + tag + "\"")
       }
@@ -339,6 +344,18 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   private initMap(): void {
     this.map = new google.maps.Map(this.gmap.nativeElement, DEFAULT_MAP_OPTIONS);
+  }
+
+  private centerOnUserLocation() {
+    navigator.geolocation.getCurrentPosition(location => {
+      if (location) {
+        this.map.setCenter({
+          lat: location.coords.latitude,
+          lng: location.coords.longitude
+        });
+      }
+      this.map.setZoom(DEFAULT_MAP_OPTIONS.zoom);
+    })
   }
 
   private constructInfoWindowHtml(event: ICommunityEvent): string {
