@@ -21,3 +21,9 @@ h3 {
 .clear-button {
     float:right;
 }
+
+@media only screen and (max-width: 500px) {
+    .mat-dialog-container {
+        max-width: 90vw;
+    }
+}

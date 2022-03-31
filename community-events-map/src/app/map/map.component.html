@@ -22,10 +22,10 @@
 
                     <mat-form-field appearance="fill" class="start-date">
                         <mat-label>Start Date</mat-label>
-                        <input readonly formControlName="startDate" required matInput [matDatepicker]="startPicker" [min]="minDate"/>
+                        <input readonly formControlName="startDate" required matInput [matDatepicker]="startPicker" (dateInput)="enableEndDateTimeFields()" [min]="minDate"/>
                         <mat-error *ngIf="eventsForm.controls.startDate.hasError('required')">Required</mat-error>
                         <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-                        <mat-datepicker #startPicker (dateInput)="enableEndDateTimeFields()"></mat-datepicker>
+                        <mat-datepicker #startPicker></mat-datepicker>
                     </mat-form-field>
                     <mat-form-field appearance="fill" class="start-time">
                         <mat-label>Start Time</mat-label>
@@ -153,12 +153,12 @@
             <mat-card-content class="upcoming-events-content">
                 <mat-selection-list [multiple]="false" [disableRipple]="true" #eventList>
                     <!--Uncomment first line, comment out second line to use mock data
-                        Note that this disables filtering of the list (as using mock data makes it static(
+                        Note that this disables filtering and sorting of the list (as using mock data makes it static(
                         However, the map will still update based on filtering
                         ))
                     -->
-                    <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of mockEvents$ | async">
-                    <!-- <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of events$ | async"> -->
+                    <!-- <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of mockEvents$ | async"> -->
+                    <mat-list-option class="event-list-item" (click)="centerOnEvent(event.geolocation)" *ngFor="let event of events$ | async">
                         <div class="event-title-container">
                             <div class="event-title">
                                 {{event.title}}

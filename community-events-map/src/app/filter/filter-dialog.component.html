@@ -13,7 +13,7 @@
     <mat-hint class="filter-hint">Click a tag to use it in the filter</mat-hint>
 </div>
 <div class="selected-tags">
-    <h3>Selected Filters</h3>
+    <h3>Selected Tags</h3>
     <mat-chip class="tag-chip" *ngFor="let tag of filter" [value]="tag" (click)="removeFromFilter(tag)">
         {{tag}}
     </mat-chip>

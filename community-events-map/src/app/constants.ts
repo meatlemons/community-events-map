@@ -12,8 +12,8 @@ export const SNACKBAR_DURATION_DEFAULT = 3000;
 // UI dimensions (outside SCSS)
 export const DIALOG_MIN_HEIGHT = "25vh";
 export const DIALOG_MAX_HEIGHT = "50vh";
-export const DIALOG_MIN_WIDTH = "40vw";
-export const DIALOG_MAX_WIDTH = "60vw";
+export const DIALOG_MIN_WIDTH = "60vw";
+export const DIALOG_MAX_WIDTH = "80vw";
 
 // Create Form
 export const DEFAULT_FORM_STATE = {

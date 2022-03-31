@@ -1,6 +1,6 @@
 const DEFAULT_MAP_CENTER: google.maps.LatLngLiteral = {
-    lat: 52.0567,
-    lng: 1.1482
+    lat: 0,
+    lng: 0
 };
 
 const DEFAULT_ZOOM: number = 12;

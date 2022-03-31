@@ -71,6 +71,7 @@ export class MapComponent implements OnInit, AfterViewInit {
         this.currentlyAppliedFilters = result;
         this.getAndFilterEvents(null, result); 
       } else {
+        this.currentlyAppliedFilters = [];
         this.getAndFilterEvents();
       }
     });
@@ -115,8 +116,13 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   enableEndDateTimeFields(): void {
     const controls = this.eventsForm.controls;
-    controls.endDate.enable();
-    controls.endTime.enable();
+    if (controls.startDate.valid && controls.startTime.valid) {
+      controls.endDate.enable();
+      controls.endTime.enable();
+    } else {
+      controls.endDate.disable();
+      controls.endTime.disable();
+    }
   }
 
   sortEvents(): void {
