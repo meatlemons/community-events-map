@@ -17,19 +17,8 @@ export interface ICommunityEventCreateRequest {
     description?: string
     contactEmail: string
     contactTelephone: string
-    geolocation?: IPoint
+    geolocation: IPoint
     tags: string[]
-}
-
-export interface ICommunityEventUpdateRequest {
-    title?: string
-    startDateTime?: Date
-    expiryDateTime?: Date
-    description?: string
-    contactEmail?: string
-    contactTelephone?: string
-    geolocation?: IPoint
-    tags?: string[]
 }
 
 export interface IAddress {

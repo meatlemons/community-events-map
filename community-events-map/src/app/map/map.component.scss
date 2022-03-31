@@ -2,7 +2,7 @@
 $default-padding: 16px;
 
 // colours
-$darken-10: rgba(0, 0, 0, 0.1);
+$darken-04: rgba(0, 0, 0, .04);
 
 #events-container {
     display: flex;
@@ -68,7 +68,7 @@ $darken-10: rgba(0, 0, 0, 0.1);
             }
             input {
                 padding: 8px;
-                background-color: $darken-10;
+                background-color: $darken-04;
                 border-radius: 4px;
             }
         }

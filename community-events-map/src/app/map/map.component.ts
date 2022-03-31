@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommunityEventService } from '../services/community-event.service';
-import { IAddress, ICommunityEvent, ICommunityEventCreateRequest, ICommunityEventFormData, IGenericRESTResponse, IPoint, ITime } from '../types/community-event.types';
+import { IAddress, ICommunityEvent, ICommunityEventCreateRequest, ICommunityEventFormData, IPoint, ITime } from '../types/community-event.types';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DEFAULT_DETAIL_ZOOM, DEFAULT_MAP_OPTIONS } from './map.defaults';
@@ -133,7 +133,21 @@ export class MapComponent implements OnInit, AfterViewInit {
     this.map.setZoom(DEFAULT_DETAIL_ZOOM);
   }
 
-  // TODO: get form data type
+  searchForEvent() {
+    this.getAndFilterEvents(this.searchQuery);
+    this.searchQuery = "";
+  }
+
+  clearSearch() {
+    this.getAndFilterEvents();
+  }
+
+  enableEndDateTimeFields(): void {
+    const controls = this.eventsForm.controls;
+    controls.endDate.enable();
+    controls.endTime.enable();
+  }
+
   async submitForm(): Promise<void> {
     const formData: ICommunityEventFormData = this.eventsForm.value;
 
@@ -210,21 +224,6 @@ export class MapComponent implements OnInit, AfterViewInit {
         }
       });
     });
-  }
-
-  searchForEvent() {
-    this.getAndFilterEvents(this.searchQuery);
-    this.searchQuery = "";
-  }
-
-  clearSearch() {
-    this.getAndFilterEvents();
-  }
-
-  enableEndDateTimeFields(): void {
-    const controls = this.eventsForm.controls;
-    controls.endDate.enable();
-    controls.endTime.enable();
   }
 
   private getAndFilterEvents(searchQuery?: string, tagFilter?: string[]): Observable<ICommunityEvent[]> {

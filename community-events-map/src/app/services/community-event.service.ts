@@ -43,12 +43,6 @@ export class CommunityEventService {
     );
   }
 
-  updateEvent(eventId: string, updatedEventDetails: ICommunityEvent): Observable<IGenericRESTResponse> {
-    const endpoint = `event/update/${eventId}`;
-
-    return this.http.post<IGenericRESTResponse>(this.root + endpoint, updatedEventDetails);
-  }
-
   deleteEvent(eventId: string): Observable<IGenericRESTResponse> {
     const endpoint = `/event?eventId=${eventId}`;
 

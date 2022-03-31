@@ -38,10 +38,10 @@ connection.connect(function(err) {
 
 // ping test
 app.get('/api/ping', (req, res) => {
-  res.send('pong')
-})
+  res.send('pong');
+});
 
-// get events
+// get list of events
 app.get('/api/events', (req, res) => {
     const GET_EVENTS = `SELECT * FROM events`;
     let response;
@@ -52,31 +52,22 @@ app.get('/api/events', (req, res) => {
                 code: -1,
                 message: ERROR_MESSAGES.read + err
             }
+            console.log(`GET events failed with: ${message}`);
             res.status(500).json(response);
         } else {
             response = {
                 result,
                 ...DEFAULT_SUCCESS_RESPONSE
             }
-            // console.log(JSON.stringify(result));
+            console.log(`Retrieved events with message: ${response.message}`);
             res.status(200).json(response);
         }
     });
 });
 
-// create event
+// create an event
 app.post('/api/event', (req, res) => {
-    console.log(`
-    Creating a new event with:\n
-    ${req.body.title},
-    ${req.body.startDateTime},
-    ${req.body.expiryDateTime},
-    ${req.body.description},
-    ${req.body.contactEmail},
-    ${req.body.contactTelephone},
-    POINT(${req.body.geolocation.x}, ${req.body.geolocation.y}),
-    ${req.body.tags}
-    `);
+    console.log(`Creating a new event with the following query:\n${CREATE_EVENT}`);
     const CREATE_EVENT = `
     INSERT INTO events (
         EventTitle, 
