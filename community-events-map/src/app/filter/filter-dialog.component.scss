@@ -1,0 +1,23 @@
+h3 {
+    margin-bottom: 0;
+}
+
+.available-tags {
+    margin: 48px 0 16px 0;
+}
+
+.selected-tags {
+    margin: 24px 0 16px 0;
+}
+
+.all-tags[disabled="true"] {
+    pointer-events: none;
+}
+
+.filter-hint {
+    margin-bottom: 32px;
+}
+
+.clear-button {
+    float:right;
+}
