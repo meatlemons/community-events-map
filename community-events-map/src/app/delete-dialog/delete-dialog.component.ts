@@ -11,7 +11,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class DeleteDialogComponent {
 
-  disableDelete$ = new BehaviorSubject(true);
+  disableDelete$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
 
   constructor(
     private _communityEventService: CommunityEventService,

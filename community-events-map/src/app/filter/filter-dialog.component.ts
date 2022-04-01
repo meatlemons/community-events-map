@@ -18,11 +18,11 @@ export class FilterDialogComponent {
     @Inject(MAT_DIALOG_DATA) public filterData: IFilterDialog
   ) { }
 
-  addToFilter(tag: string) {
+  addToFilter(tag: string): void {
     this.filter.push(tag);
   }
 
-  removeFromFilter(tag: string) {
+  removeFromFilter(tag: string): void {
     const index = this.filter.indexOf(tag);
     if (index !== -1) {
       this.filter.splice(index, 1);

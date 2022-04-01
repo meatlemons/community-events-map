@@ -5,15 +5,13 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DEFAULT_DETAIL_ZOOM, DEFAULT_MAP_OPTIONS } from './map.defaults';
 import { COUNTIES } from './form.data';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { TIME_INPUT_VALIDATION } from './regex';
+import { FormGroup } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MOCK_EVENTS } from '../mocks/mock.data';
 import { MatDialog } from '@angular/material/dialog';
 import { FilterDialogComponent } from '../filter/filter-dialog.component';
 import { BST_HOURS_OFFSET, DEFAULT_FORM_STATE, DIALOG_MAX_HEIGHT, DIALOG_MAX_WIDTH, DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH, SNACKBAR_DURATION_DEFAULT } from '../constants';
 import { DeleteDialogComponent } from '../delete-dialog/delete-dialog.component';
-import { TooltipPosition } from '@angular/material/tooltip';
 import { MatSelectionList } from '@angular/material/list';
 @Component({
   selector: 'app-map',
@@ -26,18 +24,17 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   events$: Observable<ICommunityEvent[]>;
   map: google.maps.Map;
-  markers: google.maps.Marker[] = [];
-  tagList: string[] = [];
-  minDate = new Date(Date.now());
+  minDate: Date = new Date(Date.now());
   counties = COUNTIES;
   searchQuery: string;
-  searchResults$: Observable<ICommunityEvent[]>;
-  currentlyAppliedFilters: string[];
-  reverseSort: boolean = false;
-  tooltipPositionOptions: TooltipPosition[];
   eventsForm: FormGroup = new FormGroup(DEFAULT_FORM_STATE);
 
   mockEvents$ = MOCK_EVENTS;
+
+  private currentlyAppliedFilters: string[];
+  private reverseSort: boolean = false;
+  private markers: google.maps.Marker[] = [];
+  private tagList: string[] = [];
 
   constructor(
     private readonly _communityEventService: CommunityEventService,
@@ -101,12 +98,12 @@ export class MapComponent implements OnInit, AfterViewInit {
     this.map.setZoom(DEFAULT_DETAIL_ZOOM);
   }
 
-  searchForEvent() {
+  searchForEvent(): void {
     this.getAndFilterEvents(this.searchQuery);
     this.searchQuery = "";
   }
 
-  clearSearchFiltersSort() {
+  clearSearchFiltersSort(): void {
     this.searchQuery = "";
     this.currentlyAppliedFilters = [];
     this.centerOnUserLocation();
@@ -353,7 +350,7 @@ export class MapComponent implements OnInit, AfterViewInit {
     this.map = new google.maps.Map(this.gmap.nativeElement, DEFAULT_MAP_OPTIONS);
   }
 
-  private centerOnUserLocation() {
+  private centerOnUserLocation(): void {
     navigator.geolocation.getCurrentPosition(location => {
       if (location) {
         this.map.setCenter({
